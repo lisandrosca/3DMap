@@ -1,0 +1,207 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>ROV Mission Control - Falkor (too)</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <style>
+      /* Evitar gestos del navegador como 'pull-to-refresh' */
+      body { margin: 0; overflow: hidden; touch-action: none; }
+
+
+      #ui-container {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        font-family: 'Courier New', Courier, monospace;
+        color: #00ff00;
+        z-index: 999;
+      }
+
+
+      /* HUD de Profundidad - Movido un poco a la izquierda para los botones */
+      #hud-depth {
+        position: absolute;
+        top: 20px;
+        right: 140px; 
+        background: rgba(0, 20, 0, 0.7);
+        padding: 8px 15px;
+        border: 1px solid #00ff00;
+        border-radius: 5px;
+        font-size: 18px;
+      }
+
+
+      /* Forzar botones de VR y AR a la esquina superior derecha */
+      .a-enter-vr, .a-enter-ar {
+        top: 20px !important;
+        bottom: auto !important;
+        background-color: rgba(0, 50, 0, 0.5) !important;
+        border: 1px solid #00ff00 !important;
+        border-radius: 5px !important;
+      }
+      .a-enter-vr { right: 20px !important; }
+      .a-enter-ar { right: 75px !important; } /* El de AR al lado del de VR */
+      .a-enter-vr-button, .a-enter-ar-button { background-size: 70% !important; }
+
+
+      /* Contenedor de controles inferiores */
+      #controls-wrapper {
+        position: absolute;
+        bottom: 40px;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        padding: 0 40px;
+        pointer-events: auto;
+      }
+
+
+      .control-group { display: flex; flex-direction: column; align-items: center; }
+      .row { display: flex; gap: 10px; }
+
+
+      .btn {
+        width: 60px;
+        height: 60px;
+        background: rgba(0, 50, 0, 0.3);
+        border: 1px solid #00ff00;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: #00ff00;
+        font-size: 24px;
+        touch-action: none;
+        cursor: pointer;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .btn:active { background: rgba(0, 255, 0, 0.5); }
+      
+      .v-gap { height: 10px; }
+    </style>
+  </head>
+  <body>
+
+
+    <div id="ui-container">
+      <div id="hud-depth">D: <span id="depth-value">615.0</span>m</div>
+
+
+      <div id="controls-wrapper">
+        <div class="control-group">
+          <div class="btn" id="up">▲</div>
+          <div class="v-gap"></div>
+          <div class="row">
+            <div class="btn" id="left">◀</div>
+            <div class="btn" id="down">▼</div>
+            <div class="btn" id="right">▶</div>
+          </div>
+        </div>
+
+
+        <div class="control-group">
+          <div class="btn" id="ascend">▲</div>
+          <div class="v-gap"></div>
+          <div class="btn" id="descend">▼</div>
+        </div>
+      </div>
+    </div>
+
+
+    <a-scene 
+      vr-mode-ui="enabled: true" 
+      renderer="antialias: true"
+      device-orientation-permission-ui="enabled: false"
+      fog="type: exponential; color: #00050a; density: 0.1">
+      
+      <a-assets>
+        <a-asset-item id="landscape" src="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Duck/glTF-Binary/Duck.glb" crossorigin="anonymous"></a-asset-item>
+      </a-assets>
+
+
+      <a-grid position="0 0 0" cellColor="#00ff00" sectionColor="#005500" opacity="0.1"></a-grid>
+      <a-entity gltf-model="#landscape" position="0 0 -10" scale="5 5 5"></a-entity>
+
+
+      <a-entity id="rig" position="0 1.6 0">
+        <a-entity id="myCamera" 
+          camera 
+          look-controls="magicWindowTrackingEnabled: false; touchEnabled: true; pointerLockEnabled: false" 
+          wasd-controls="enabled: false">
+        </a-entity>
+      </a-entity>
+
+
+      <a-light type="ambient" color="#fff" intensity="0.4"></a-light>
+      <a-light type="directional" position="1 10 1" intensity="0.6"></a-light>
+      <a-sky color="#00050a"></a-sky>
+    </a-scene>
+
+
+    <script>
+      const cameraRig = document.getElementById('rig');
+      const depthDisplay = document.getElementById('depth-value');
+      const initialDepth = 615.0;
+      
+      let activeMove = null;
+      const speed = 0.08;
+
+
+      function move() {
+        if (!activeMove) return;
+        
+        const rotation = document.getElementById('myCamera').getAttribute('rotation');
+        const angle = rotation.y * Math.PI / 180;
+        const pos = cameraRig.getAttribute('position');
+        
+        switch(activeMove) {
+          case 'up':
+            pos.x -= Math.sin(angle) * speed;
+            pos.z -= Math.cos(angle) * speed;
+            break;
+          case 'down':
+            pos.x += Math.sin(angle) * speed;
+            pos.z += Math.cos(angle) * speed;
+            break;
+          case 'left':
+            pos.x -= Math.cos(angle) * speed;
+            pos.z += Math.sin(angle) * speed;
+            break;
+          case 'right':
+            pos.x += Math.cos(angle) * speed;
+            pos.z -= Math.sin(angle) * speed;
+            break;
+          case 'ascend':
+            pos.y += speed;
+            break;
+          case 'descend':
+            pos.y -= speed;
+            break;
+        }
+
+
+        cameraRig.setAttribute('position', pos);
+        depthDisplay.innerText = (initialDepth - pos.y).toFixed(1);
+        
+        requestAnimationFrame(move);
+      }
+
+
+      ['up', 'down', 'left', 'right', 'ascend', 'descend'].forEach(id => {
+        const btn = document.getElementById(id);
+        const start = (e) => { e.preventDefault(); activeMove = id; move(); };
+        const stop = () => { activeMove = null; };
+        
+        btn.addEventListener('touchstart', start);
+        btn.addEventListener('touchend', stop);
+        btn.addEventListener('mousedown', start);
+        btn.addEventListener('mouseup', stop);
+        btn.addEventListener('mouseleave', stop);
+      });
+    </script>
+  </body>
+</html>
