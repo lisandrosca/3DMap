@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8">
@@ -7,109 +7,86 @@
     <style>
       * { touch-action: none; user-select: none; -webkit-tap-highlight-color: transparent; }
       body { margin: 0; overflow: hidden; background-color: #000; }
-
-      #ui-container {
-        position: fixed;
-        inset: 0;
-        pointer-events: none;
-        font-family: 'Courier New', Courier, monospace;
-        color: #00ff00;
-        z-index: 999;
-      }
-
-      #hud-depth {
-        position: absolute;
-        top: 20px;
-        right: 130px; 
-        background: rgba(0, 20, 0, 0.7);
-        padding: 8px 15px;
-        border: 1px solid #00ff00;
-        border-radius: 5px;
-        font-size: 18px;
-      }
-
-      .a-enter-vr, .a-enter-ar {
-        top: 20px !important;
-        bottom: auto !important;
-        background-color: rgba(0, 50, 0, 0.5) !important;
-        border: 1px solid #00ff00 !important;
-        border-radius: 5px !important;
-        pointer-events: auto !important;
-      }
-      .a-enter-vr { right: 20px !important; }
-      .a-enter-ar { right: 75px !important; }
-
-      #controls-wrapper {
-        position: absolute;
-        bottom: 40px;
-        left: 0;
-        right: 0;
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-end;
-        padding: 0 30px;
-        pointer-events: auto;
-      }
-
-      .control-group { display: flex; flex-direction: column; align-items: center; gap: 10px; }
-      .row { display: flex; gap: 10px; }
-
-      .btn {
-        width: 60px;
-        height: 60px;
-        background: rgba(0, 50, 0, 0.4);
-        border: 1px solid #00ff00;
-        border-radius: 50%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        color: #00ff00;
-        font-size: 24px;
-        cursor: pointer;
-      }
+      #ui-container { position: fixed; inset: 0; pointer-events: none; font-family: monospace; color: #00ff00; z-index: 999; }
+      #debug-console { position: absolute; top: 70px; left: 20px; background: rgba(0, 20, 0, 0.8); padding: 8px; border: 1px solid #00ff00; font-size: 11px; }
+      #hud-depth { position: absolute; top: 20px; right: 130px; background: rgba(0, 20, 0, 0.7); padding: 8px 15px; border: 1px solid #00ff00; border-radius: 5px; font-size: 18px; }
+      .a-enter-vr, .a-enter-ar { top: 20px !important; bottom: auto !important; background-color: rgba(0, 50, 0, 0.5) !important; border: 1px solid #00ff00 !important; pointer-events: auto !important; }
+      .a-enter-vr { right: 20px !important; } .a-enter-ar { right: 75px !important; }
+      #controls-wrapper { position: absolute; bottom: 40px; left: 0; right: 0; display: flex; justify-content: space-between; align-items: flex-end; padding: 0 30px; pointer-events: auto; }
+      .control-group { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+      .row { display: flex; gap: 8px; }
+      .btn { width: 60px; height: 60px; background: rgba(0, 50, 0, 0.4); border: 1px solid #00ff00; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #00ff00; font-size: 24px; cursor: pointer; }
       .btn:active { background: rgba(0, 255, 0, 0.5); }
-      .label-ui { font-size: 10px; color: #00ff00; margin-bottom: 2px; opacity: 0.6; }
     </style>
   </head>
   <body>
-
     <div id="ui-container">
       <div id="hud-depth">D: <span id="depth-value">615.0</span>m</div>
-
+      <div id="debug-console">SISTEMA: Iniciando...</div>
       <div id="controls-wrapper">
         <div class="control-group">
           <div class="btn" id="up">▲</div>
-          <div class="row">
-            <div class="btn" id="left">◀</div>
-            <div class="btn" id="down">▼</div>
-            <div class="btn" id="right">▶</div>
-          </div>
+          <div class="row"><div class="btn" id="left">◀</div><div class="btn" id="down">▼</div><div class="btn" id="right">▶</div></div>
         </div>
-
-        <div class="control-group">
-          <div class="label-ui">ZOOM</div>
-          <div class="btn" id="zoomIn">+</div>
-          <div class="btn" id="zoomOut">-</div>
-        </div>
-
-        <div class="control-group">
-          <div class="label-ui">VERT</div>
-          <div class="btn" id="ascend">▲</div>
-          <div class="btn" id="descend">▼</div>
-        </div>
+        <div class="control-group"><div class="btn" id="zoomIn">+</div><div class="btn" id="zoomOut">-</div></div>
+        <div class="control-group"><div class="btn" id="ascend">▲</div><div class="btn" id="descend">▼</div></div>
       </div>
     </div>
 
-    <a-scene 
-      renderer="antialias: true; colorManagement: true"
-      vr-mode-ui="enabled: true"
-      device-orientation-permission-ui="enabled: false">
-      
+    <a-scene renderer="antialias: true; colorManagement: true" device-orientation-permission-ui="enabled: false">
       <a-assets>
-        <a-asset-item id="main-map" src="Map.glb" crossorigin="anonymous"></a-asset-item>
+        <a-asset-item id="main-map" src="map.glb" crossorigin="anonymous"></a-asset-item>
       </a-assets>
+      <a-grid position="0 0 0" opacity="0.1"></a-grid>
+      <a-entity id="target-model" gltf-model="#main-map" position="0 -2 -5" scale="1 1 1"></a-entity>
+      <a-entity id="rig" position="0 1.6 0">
+        <a-entity id="myCamera" camera="fov: 60" look-controls="magicWindowTrackingEnabled: false; touchEnabled: true">
+          <a-light type="spot" intensity="2" distance="40" angle="45"></a-light>
+        </a-entity>
+      </a-entity>
+      <a-light type="hemisphere" intensity="0.8"></a-light>
+      <a-sky color="#050505"></a-sky>
+    </a-scene>
 
-      <a-grid position="0 0 0" cellColor="#00ff00" sectionColor="#005500" opacity="0.1"></a-grid>
-      
+    <script>
+      const debug = document.getElementById('debug-console');
+      const model = document.getElementById('target-model');
+      const cameraRig = document.getElementById('rig');
+      const myCamera = document.getElementById('myCamera');
+      const depthDisplay = document.getElementById('depth-value');
+      let activeMove = null;
+      const speed = 0.1;
 
-      
+      model.addEventListener('model-loaded', () => { debug.innerText = "SISTEMA: Map.glb cargado OK"; debug.style.color = "#00ff00"; });
+      model.addEventListener('model-error', () => { debug.innerText = "ERROR: No se encontró Map.glb"; debug.style.color = "#ff0000"; });
+
+      function move() {
+        if (!activeMove) return;
+        const rotation = myCamera.getAttribute('rotation');
+        const angle = rotation.y * Math.PI / 180;
+        const pos = cameraRig.getAttribute('position');
+        let fov = myCamera.getAttribute('camera').fov;
+        if (activeMove === 'up') { pos.x -= Math.sin(angle) * speed; pos.z -= Math.cos(angle) * speed; }
+        if (activeMove === 'down') { pos.x += Math.sin(angle) * speed; pos.z += Math.cos(angle) * speed; }
+        if (activeMove === 'left') { pos.x -= Math.cos(angle) * speed; pos.z += Math.sin(angle) * speed; }
+        if (activeMove === 'right') { pos.x += Math.cos(angle) * speed; pos.z -= Math.sin(angle) * speed; }
+        if (activeMove === 'ascend') pos.y += speed;
+        if (activeMove === 'descend') pos.y -= speed;
+        if (activeMove === 'zoomIn') fov = Math.max(100, fov - 10);
+        if (activeMove === 'zoomOut') fov = Math.min(100, fov + 10);
+        cameraRig.setAttribute('position', pos);
+        myCamera.setAttribute('camera', 'fov', fov);
+        depthDisplay.innerText = (615.0 - pos.y).toFixed(1);
+        requestAnimationFrame(move);
+      }
+
+      ['up', 'down', 'left', 'right', 'ascend', 'descend', 'zoomIn', 'zoomOut'].forEach(id => {
+        const btn = document.getElementById(id);
+        const start = (e) => { e.preventDefault(); activeMove = id; move(); };
+        const stop = () => { activeMove = null; };
+        btn.addEventListener('touchstart', start); btn.addEventListener('touchend', stop);
+        btn.addEventListener('mousedown', start); btn.addEventListener('mouseup', stop);
+      });
+    </script>
+  </body>
+</html>
